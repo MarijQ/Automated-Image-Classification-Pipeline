@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+   <meta charset="UTF-8">
+
+   <title>VisualDx Cookie Check</title>
+
+   <meta name="description" content="This page checks if javascript and session cookies are enabled" />
+   <meta name="keywords" content="" />
+   <meta name="viewport" content="width=device-width" />
+
+   <link href='/visualdx/7/css/app.css?r=b27a4c703' rel='stylesheet' type='text/css'/>
+   <link rel="icon" type="image/png" href="/assets/favicons/favicon.ico?r=b27a4c703"/>
+   <link rel="shortcut icon" type="image/png" href="/assets/favicons/favicon.ico?r=b27a4c703"/>
+  <script type="text/javascript">
+    function check() {
+      var anchorValue;
+      var url = document.location;
+      var strippedUrl = url.toString().split("#");
+      if (strippedUrl.length > 1) {
+        anchorValue = strippedUrl[1];
+        document.getElementById("stateTags").value = anchorValue;
+      }
+      document.getElementById("cookieCheckSubmit").click();
+    }
+  </script>
+</head>
+
+<body class="flex" onload="check()">
+  <div style="display: none">
+    <form name="checkForm" id="checkForm" method="POST" action="/visualdx/login">
+      <input name="jsid" id="jsid" type="hidden" value="917AC8D08D9BFC0DFCF000D63B5B14A3"/>
+      <input name="stateTags" id="stateTags" type="hidden" value="" />
+      <input name="submit" id="cookieCheckSubmit" type="submit" value="" />
+    </form>
+  </div>
+  <div style="width: 100; text-align: center; padding: 3em; color: #fff;">
+    <p>VisualDx requires the use of cookies. We are checking your browser for cookie support. Please wait a moment while we redirect you.</p>
+  </div>
+  <div style="text-align: center; margin-bottom: 60px";>
+      <i>
+        Copyright &#169; 2024 VisualDx<sup>&#174;</sup>. All rights reserved.</i><br/>
+      <b>Unauthorized use of this site is strictly prohibited.</b><br/>
+    </div>
+</body>
+</html>
