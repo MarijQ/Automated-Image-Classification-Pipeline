@@ -1,0 +1,36 @@
+{
+    "buttons": [
+        {
+            "text": "HEALTHY",
+            "command": "on_health_clicked"
+        },
+        {
+            "text": "UNHEALTHY",
+            "command": "on_unhealthy_clicked"
+        },
+        {
+            "text": "DISCARD",
+            "command": "on_discard_clicked"
+        },
+        {
+            "text": "DISGUSTING!",
+            "command": "on_discard_clicked"
+        },
+        {
+            "text": "Vomit!",
+            "command": "on_discard_clicked"
+        },
+        {
+            "text": "<",
+            "command": "backward"
+        },
+        {
+            "text": ">",
+            "command": "forward"
+        },
+        {
+            "text": "EXIT",
+            "command": "quit"
+        }
+    ]
+}
