@@ -20,12 +20,21 @@ class ImageProcessor:
         self._prepare_output_directory()
 
     def _prepare_output_directory(self):
-        """Clears the contents of the output directory if it exists."""
+        """Clears the contents of the output directory if it exists and removes duplicate images."""
         if os.path.exists(self.output_dir):
+            image_hashes = {}
             for filename in os.listdir(self.output_dir):
                 file_path = os.path.join(self.output_dir, filename)
                 try:
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                    if os.path.isfile(file_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        img_hash = self._compute_image_hash(file_path)
+                        if img_hash in image_hashes:
+                            # Duplicate found, remove the file
+                            os.remove(file_path)
+                            print(f"Removed duplicate image: {file_path}")
+                        else:
+                            image_hashes[img_hash] = file_path
+                    elif os.path.islink(file_path):
                         os.remove(file_path)
                     elif os.path.isdir(file_path):
                         shutil.rmtree(file_path)
@@ -33,6 +42,13 @@ class ImageProcessor:
                     print(f"Error deleting {file_path}: {e}")
         else:
             os.makedirs(self.output_dir, exist_ok=True)
+
+    def _compute_image_hash(self, image_path):
+        """Computes the dHash of an image to detect duplicates."""
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        resized = cv2.resize(image, (9, 8))  # Resize to 9x8 to compute the hash
+        diff = resized[:, 1:] > resized[:, :-1]  # Compute the difference between adjacent pixels
+        return sum([2 ** i for (i, v) in enumerate(diff.flatten()) if v])
 
     def process_image(self, image_path):
         """Processes a single image and returns the filter scores."""
@@ -48,52 +64,6 @@ class ImageProcessor:
             'quality_score': quality_score,
             'edge_score': edge_score
         }
-
-    def text_filter(self, image):
-        """Detects the presence of text in the image using OCR and calculates the area occupied by the text at the letter level."""
-        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-
-        total_text_area = 0
-        total_image_area = image.shape[0] * image.shape[1]
-
-        for i in range(len(data['text'])):
-            if int(data['conf'][i]) > 0 and data['text'][i].strip() != "":
-                x, y, w, h = data['left'][i], data['top'][i], data['width'][i], data['height'][i]
-                text_area = w * h
-                total_text_area += text_area
-
-        text_density = total_text_area / total_image_area
-        return 1 - min(text_density / self.config['text_detection_threshold'], 1)
-
-    def color_filter(self, image):
-        """Filters out images with a high presence of unwanted colors for fingernails."""
-        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        combined_mask = np.zeros(hsv_image.shape[:2], dtype=np.uint8)
-
-        for lower_bound, upper_bound in self.config['color_ranges']:
-            mask = cv2.inRange(hsv_image, lower_bound, upper_bound)
-            combined_mask = cv2.bitwise_or(combined_mask, mask)
-
-        color_density = np.sum(combined_mask) / (combined_mask.shape[0] * combined_mask.shape[1])
-        return 1 - min(color_density / self.config['color_filter_threshold'], 1)
-
-    def quality_filter(self, image):
-        """Evaluates the quality of the image based on blur and brightness."""
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        laplacian_var = cv2.Laplacian(gray_image, cv2.CV_64F).var()
-        blur_score = min(laplacian_var / self.config['blur_threshold'], 1)
-
-        brightness = np.mean(gray_image)
-        brightness_score = 1 if self.config['brightness_threshold'][0] <= brightness <= self.config['brightness_threshold'][1] else 0
-
-        return (blur_score * brightness_score) ** 0.5
-
-    def edge_filter(self, image):
-        """Detects the presence of edges in the image."""
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges = filters.sobel(gray_image)
-        edge_density = np.sum(edges) / (edges.shape[0] * edges.shape[1])
-        return min(edge_density / self.config['edge_threshold'], 1)
 
 
 class BayesianOptimizer:
